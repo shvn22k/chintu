@@ -1,0 +1,6 @@
+id,name,description,keywords
+topic_diplomacy,Diplomacy,Diplomatic relations and negotiations,"diplomacy,negotiation,treaty,agreement"
+topic_politics,Politics,Political events and governance,"politics,government,election,policy"
+topic_security,Security,Military and security affairs,"military,defense,conflict,war,security"
+topic_economy,Economy,Economic events and trade,"economy,trade,finance,market,tariff"
+topic_humanitarian,Humanitarian,Humanitarian aid and crises,"humanitarian,aid,refugee,crisis,relief"

@@ -1,0 +1,35 @@
+/**
+ * CHINTU — Entity Influence Map ("who is involved globally?")
+ *
+ * Events involving the entity (INVOLVES: Event -> Entity), ranked by impact_score.
+ *
+ * Call: RUN QUERY entity_influence_map("ent_BRA", 100)
+ */
+CREATE QUERY entity_influence_map(
+  STRING entity_id,
+  INT top_k = 100
+) FOR GRAPH CHINTU {
+
+  SumAccum<INT> @@entity_count;
+  Ent = SELECT x FROM Entity:x WHERE x.id == entity_id LIMIT 1;
+  Ent = SELECT x FROM Ent:x ACCUM @@entity_count += 1;
+
+  IF @@entity_count == 0 THEN
+    PRINT "unknown_entity_id" AS error;
+  ELSE
+    Events = SELECT evt
+      FROM Event:evt -(INVOLVES:i)-> Entity:t
+      WHERE t.id == entity_id
+      ORDER BY evt.impact_score DESC, evt.severity DESC, evt.timestamp DESC, evt.id ASC
+      LIMIT top_k;
+
+    PRINT Events[
+      Events.id AS event_id,
+      Events.title AS title,
+      Events.event_type AS event_type,
+      Events.timestamp AS timestamp,
+      Events.impact_score AS impact_score,
+      Events.severity AS severity
+    ];
+  END;
+}

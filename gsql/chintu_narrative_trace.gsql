@@ -1,0 +1,69 @@
+/**
+ * CHINTU — Narrative Trace (reverse / "why did this happen?")
+ *
+ * Predecessors along INFLUENCES: each hop expands from the previous wave only,
+ * so we only need the current frontier in a SetAccum (no IN on vertex sets).
+ *
+ * Call: RUN QUERY narrative_trace("evt_123", 3, 500)
+ */
+CREATE QUERY narrative_trace(
+  STRING event_id,
+  INT max_hops = 3,
+  INT top_k = 500
+) FOR GRAPH CHINTU {
+
+  SumAccum<INT> @@seed_count;
+  MaxAccum<FLOAT> @cum_strength;
+  MinAccum<INT> @hop_dist;
+  MaxAccum<FLOAT> @signed_cum;
+
+  SetAccum<STRING> @@frontier_ids;
+  SetAccum<STRING> @@next_frontier;
+
+  Start = SELECT s FROM Event:s WHERE s.id == event_id LIMIT 1;
+  Start = SELECT s FROM Start:s ACCUM @@seed_count += 1;
+
+  IF @@seed_count == 0 THEN
+    PRINT "unknown_event_id" AS error;
+  ELSE
+    Total = SELECT s FROM Start:s
+      ACCUM
+        s.@hop_dist += 0,
+        s.@cum_strength += 1.0,
+        s.@signed_cum += 1.0;
+
+    SeedMark = SELECT s FROM Start:s ACCUM @@frontier_ids += s.id;
+
+    FOREACH i IN RANGE[1, max_hops] DO
+      @@next_frontier.clear();
+      Wave = SELECT s
+        FROM Event:s -(INFLUENCES:e)-> Event:t
+        WHERE t.id IN @@frontier_ids
+        ACCUM
+          s.@cum_strength += t.@cum_strength * e.strength,
+          s.@hop_dist += t.@hop_dist + 1,
+          s.@signed_cum += t.@signed_cum * e.strength * e.polarity;
+      Total = Total UNION Wave;
+      NextMark = SELECT s FROM Wave:s ACCUM @@next_frontier += s.id;
+      @@frontier_ids = @@next_frontier;
+    END;
+
+    Out = SELECT e
+      FROM Total:e
+      WHERE e.id != event_id
+      ORDER BY e.@cum_strength DESC, e.impact_score DESC, e.id ASC
+      LIMIT top_k;
+
+    PRINT Out[
+      Out.id AS event_id,
+      Out.title AS title,
+      Out.event_type AS event_type,
+      Out.timestamp AS timestamp,
+      Out.impact_score AS impact_score,
+      Out.severity AS severity,
+      Out.@cum_strength AS cumulative_strength,
+      Out.@hop_dist AS hop_count,
+      Out.@signed_cum AS signed_cumulative
+    ];
+  END;
+}

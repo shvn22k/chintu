@@ -1,0 +1,63 @@
+/**
+ * CHINTU — Causal Explosion (forward / "what happens next?")
+ *
+ * From a seed event, follow OUTGOING INFLUENCES up to max_hops (default 3).
+ * For each reachable event (excluding the seed), returns:
+ *   - cumulative_strength: max over all ≤max_hops paths of ∏ edge.strength
+ *   - hop_count: minimum hops from seed on the graph closure (BFS distance)
+ *   - signed_cumulative: max over paths of ∏ (edge.strength * edge.polarity)
+ *
+ * Call (installed): RUN QUERY causal_explosion("evt_123", 3, 500)
+ */
+CREATE QUERY causal_explosion(
+  STRING event_id,
+  INT max_hops = 3,
+  INT top_k = 500
+) FOR GRAPH CHINTU {
+
+  SumAccum<INT> @@seed_count;
+  MaxAccum<FLOAT> @cum_strength;
+  MinAccum<INT> @hop_dist;
+  MaxAccum<FLOAT> @signed_cum;
+
+  Start = SELECT s FROM Event:s WHERE s.id == event_id LIMIT 1;
+  Start = SELECT s FROM Start:s ACCUM @@seed_count += 1;
+
+  IF @@seed_count == 0 THEN
+    PRINT "unknown_event_id" AS error;
+  ELSE
+    Total = SELECT s FROM Start:s
+      ACCUM
+        s.@hop_dist += 0,
+        s.@cum_strength += 1.0,
+        s.@signed_cum += 1.0;
+
+    FOREACH i IN RANGE[1, max_hops] DO
+      Wave = SELECT t
+        FROM Total:s -(INFLUENCES:e)-> Event:t
+        ACCUM
+          t.@cum_strength += s.@cum_strength * e.strength,
+          t.@hop_dist += s.@hop_dist + 1,
+          t.@signed_cum += s.@signed_cum * e.strength * e.polarity;
+      Total = Total UNION Wave;
+    END;
+
+    Out = SELECT e
+      FROM Total:e
+      WHERE e.id != event_id
+      ORDER BY e.@cum_strength DESC, e.impact_score DESC, e.id ASC
+      LIMIT top_k;
+
+    PRINT Out[
+      Out.id AS event_id,
+      Out.title AS title,
+      Out.event_type AS event_type,
+      Out.timestamp AS timestamp,
+      Out.impact_score AS impact_score,
+      Out.severity AS severity,
+      Out.@cum_strength AS cumulative_strength,
+      Out.@hop_dist AS hop_count,
+      Out.@signed_cum AS signed_cumulative
+    ];
+  END;
+}
