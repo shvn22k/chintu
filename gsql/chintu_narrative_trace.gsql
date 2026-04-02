@@ -48,6 +48,24 @@ CREATE QUERY narrative_trace(
       @@frontier_ids = @@next_frontier;
     END;
 
+    /* Focal event (seed) — always returned so the API/UI never show an empty graph when the id exists. */
+    SeedRow = SELECT s FROM Total:s WHERE s.id == event_id LIMIT 1;
+
+    PRINT SeedRow[
+      SeedRow.id AS event_id,
+      SeedRow.title AS title,
+      SeedRow.event_type AS event_type,
+      SeedRow.timestamp AS timestamp,
+      SeedRow.impact_score AS impact_score,
+      SeedRow.severity AS severity,
+      SeedRow.location AS location,
+      SeedRow.source_url AS source_url,
+      SeedRow.description AS description,
+      SeedRow.@cum_strength AS cumulative_strength,
+      SeedRow.@hop_dist AS hop_count,
+      SeedRow.@signed_cum AS signed_cumulative
+    ] AS seed;
+
     Out = SELECT e
       FROM Total:e
       WHERE e.id != event_id
@@ -61,9 +79,12 @@ CREATE QUERY narrative_trace(
       Out.timestamp AS timestamp,
       Out.impact_score AS impact_score,
       Out.severity AS severity,
+      Out.location AS location,
+      Out.source_url AS source_url,
+      Out.description AS description,
       Out.@cum_strength AS cumulative_strength,
       Out.@hop_dist AS hop_count,
       Out.@signed_cum AS signed_cumulative
-    ];
+    ] AS out_rows;
   END;
 }

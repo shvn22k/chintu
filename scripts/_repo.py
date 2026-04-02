@@ -1,4 +1,4 @@
-"""Bootstrap sys.path when running files under scripts/ directly (e.g. python scripts/parse.py)."""
+"""Bootstrap ``sys.path`` when running files under ``scripts/`` (e.g. ``install_chintu_query.py``)."""
 from __future__ import annotations
 
 import sys

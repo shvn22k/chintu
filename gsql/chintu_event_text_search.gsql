@@ -1,0 +1,33 @@
+/**
+ * CHINTU — Event text search (natural language → candidate events)
+ *
+ * Case-insensitive substring match on Event.title and Event.description.
+ * Used to resolve user questions that do not contain evt_* ids.
+ *
+ * Call (installed): RUN QUERY event_text_search("brazil flood", 25)
+ */
+CREATE QUERY event_text_search(
+  STRING needle,
+  INT max_results = 25
+) FOR GRAPH CHINTU {
+
+  STRING pat;
+  pat = "%" + lower(needle) + "%";
+
+  Res = SELECT e FROM Event:e
+    WHERE (lower(e.title) LIKE pat)
+       OR (length(e.description) > 5 AND lower(e.description) LIKE pat)
+    LIMIT max_results;
+
+  PRINT Res [
+    Res.id AS event_id,
+    Res.title AS title,
+    Res.description AS description,
+    Res.timestamp AS timestamp,
+    Res.location AS location,
+    Res.source_url AS source_url,
+    Res.event_type AS event_type,
+    Res.impact_score AS impact_score,
+    Res.severity AS severity
+  ] AS matches;
+}

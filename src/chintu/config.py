@@ -19,10 +19,12 @@ def _env_path(name: str, default: Path) -> Path:
 
 
 CHINTU_EXPORT_DIR: Path = _env_path("CHINTU_EXPORT_DIR", DATA_DIR / "chintu")
-GDELT_RAW_DIR: Path = _env_path("GDELT_RAW_DIR", DATA_DIR / "gdelt_raw")
-GDELT_ZIPS_DIR: Path = _env_path("GDELT_ZIPS_DIR", DATA_DIR / "gdelt_zips")
+# GDELT ingest / batch artifacts live under experiments/ so the API surface stays small.
+_EXPERIMENTS_DATA = ROOT / "experiments" / "data"
+GDELT_RAW_DIR: Path = _env_path("GDELT_RAW_DIR", _EXPERIMENTS_DATA / "gdelt_raw")
+GDELT_ZIPS_DIR: Path = _env_path("GDELT_ZIPS_DIR", _EXPERIMENTS_DATA / "gdelt_zips")
 GSQL_DIR: Path = ROOT / "gsql"
 DOCS_DIR: Path = ROOT / "docs"
-GENERATED_DATA_DIR: Path = _env_path("GENERATED_DATA_DIR", DATA_DIR / "generated")
+GENERATED_DATA_DIR: Path = _env_path("GENERATED_DATA_DIR", _EXPERIMENTS_DATA / "generated")
 GSQL_LOAD_DIR: Path = GENERATED_DATA_DIR / "gsql_load"
 GSQL_BATCHES_DIR: Path = GENERATED_DATA_DIR / "gsql_batches"

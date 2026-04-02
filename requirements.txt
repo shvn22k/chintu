@@ -1,7 +1,0 @@
-# Core (matches pyproject.toml)
-pandas>=2.0
-python-dotenv>=1.0
-requests>=2.28
-
-# Optional: local TigerGraph / batch loading
-# pyTigerGraph>=2.0

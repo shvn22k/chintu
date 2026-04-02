@@ -21,6 +21,14 @@ build/
 .DS_Store
 Thumbs.db
 
-# Large generated artifacts (uncomment if you do not want CSVs in git)
+# Pytest
+.pytest_cache/
+
+# Large / local pipeline data (GDELT ingest lives under experiments/)
+experiments/data/gdelt_raw/*.CSV
+experiments/data/gdelt_raw/*.csv
+experiments/data/gdelt_zips/
+experiments/data/generated/
+
+# Optional: keep sample graph CSVs out of git
 # data/chintu/*.csv
-# data/gdelt_raw/*.CSV
