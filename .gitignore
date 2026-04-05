@@ -32,3 +32,6 @@ experiments/data/generated/
 
 # Optional: keep sample graph CSVs out of git
 # data/chintu/*.csv
+
+#node_modules
+node_modules/
