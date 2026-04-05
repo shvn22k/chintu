@@ -16,6 +16,14 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## CHINTU backend (Flask)
+
+Chat uses the Next.js route `POST /api/query`, which proxies to the Python API `POST /api/v1/chat/complete`.
+
+1. From the monorepo root, run the Flask app (default `http://127.0.0.1:5000`): `python -m backend`
+2. Enable CORS on the Flask side if you ever call it from the browser directly; the default setup uses the server proxy so CORS is not required for `/chat`.
+3. Optional: copy `.env.example` to `.env.local` and set `CHINTU_BACKEND_URL` if the API is not on port 5000.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

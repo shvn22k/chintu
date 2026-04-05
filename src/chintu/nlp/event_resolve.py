@@ -15,6 +15,7 @@ from typing import Any
 
 from chintu.nlp.intent_extract import IntentResult
 from chintu.tigergraph_client import run_installed_query
+from chintu.tigergraph_rest import sanitize_tigergraph_error_text
 from chintu.viz_payload import extract_event_id_heuristic, graph_viz_from_event_text_search
 
 _STOP = frozenset(
@@ -311,7 +312,7 @@ def resolve_event_id_for_question(intent: IntentResult, question: str) -> tuple[
     try:
         candidates = aggregate_event_candidates(expanded)
     except Exception as e:
-        er["search_error"] = str(e)[:500]
+        er["search_error"] = sanitize_tigergraph_error_text(str(e), 500)
         return None, meta
 
     er["candidate_count"] = len(candidates)

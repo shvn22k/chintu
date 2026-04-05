@@ -19,10 +19,15 @@ export default function Sidebar({ onNewAnalysis }: SidebarProps) {
   return (
     <aside className="w-[220px] h-screen flex flex-col bg-bg2 border-r border-border fixed left-0 top-0 z-10">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 pt-5 pb-4">
-        <div className="border border-border2 rounded px-1.5 py-0.5 font-jetbrains text-[11px] text-accent tracking-wider">
-          CHN
-        </div>
+      <div className="flex items-center gap-2.5 px-4 pt-5 pb-4">
+        <img
+          src="/logo.png"
+          alt="CHINTU"
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 object-contain bg-transparent"
+          decoding="async"
+        />
         <span className="font-sora text-sm font-medium text-text tracking-wide">CHINTU</span>
       </div>
 

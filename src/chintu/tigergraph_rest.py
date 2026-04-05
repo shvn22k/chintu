@@ -31,6 +31,50 @@ import requests
 _VERIFY_TLS = os.environ.get("TG_VERIFY_SSL", "0").strip().lower() in ("1", "true", "yes")
 
 
+def sanitize_tigergraph_error_text(text: str, max_len: int = 400) -> str:
+    """
+    Strip HTML and collapse whitespace so TigerGraph / proxy errors are readable in chat and JSON
+    (Cloud sometimes returns HTML pages for 5xx).
+    """
+    if not text:
+        return ""
+    s = re.sub(r"(?is)<script[^>]*>.*?</script>", " ", text)
+    s = re.sub(r"(?is)<style[^>]*>.*?</style>", " ", s)
+    s = re.sub(r"(?is)<[^>]+>", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    if len(s) > max_len:
+        return s[: max_len - 1] + "…"
+    return s
+
+
+def user_hint_for_tigergraph_error(detail: str) -> str:
+    """
+    Accurate operator guidance. Many failures are a **stopped Cloud workspace** or **auth**,
+    not a missing GSQL file—avoid blaming ``event_text_search`` for those.
+    """
+    low = (detail or "").lower()
+    if "failed to start workspace" in low or "auto start is not enabled" in low:
+        return (
+            "TigerGraph Cloud says the **solution workspace is not running**. In the TigerGraph Cloud console, "
+            "open this solution and click **Start**, or enable **auto-start** for it. Token and query calls fail "
+            "until the workspace is up."
+        )
+    if "token request failed" in low or "all token strategies failed" in low:
+        return (
+            "Could not get a REST token. Confirm the workspace is **running**, then check **TG_HOST** and "
+            "**TG_SECRET** in `.env` (use the solution secret from the portal, not an unrelated password)."
+        )
+    if "rest-1000" in low or "endpoint is not found" in low:
+        return (
+            "The server is reachable but a **named query** may be missing. Install **event_text_search** from "
+            "`gsql/chintu_event_text_search.gsql` if you rely on natural-language event lookup (see `src/backend/README.md`)."
+        )
+    return (
+        "Verify TigerGraph is **running**, **TG_HOST** / **TG_SECRET** are correct, and—if you do not paste an "
+        "`evt_*` id—that **event_text_search** is installed. See `src/backend/README.md`."
+    )
+
+
 def _normalize_host(url: str) -> str:
     u = (url or "").strip().rstrip("/")
     if not u.startswith(("http://", "https://")):
@@ -189,10 +233,11 @@ def _get_bearer_token() -> str:
             if tok:
                 return tok
 
-    detail = "; ".join(errors) if errors else "all token strategies failed"
+    detail_raw = "; ".join(errors) if errors else "all token strategies failed"
+    detail = sanitize_tigergraph_error_text(detail_raw, 700)
     raise RuntimeError(
         "TigerGraph token request failed. Tried GSQL /gsql/v1/tokens and REST++ /restpp/requesttoken "
-        f"with __GSQL__secret basic auth and (if set) TG_USERNAME. Last detail: {detail}"
+        f"with __GSQL__secret basic auth and (if set) TG_USERNAME. Detail: {detail}"
     )
 
 

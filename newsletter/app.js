@@ -11,6 +11,22 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const corsOrigin = process.env.NEWSLETTER_CORS_ORIGIN;
+if (corsOrigin) {
+    app.use((req, res, next) => {
+        res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+        if (req.method === 'OPTIONS') return res.sendStatus(204);
+        next();
+    });
+}
+
+function wantsJson(req) {
+    const accept = req.get('Accept') || '';
+    return accept.includes('application/json');
+}
+
 mongoose.connect(process.env.MONGO_DB_CONNECTION_STRING, {
     dbName:'chintu_emaildb'
 });
@@ -27,6 +43,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 app.post('/subscribe', async (req, res) => {
     const { name, email } = req.body;
     if (!name || !email) {
+        if (wantsJson(req)) {
+            return res.status(400).json({ ok: false, error: 'Name and email are required' });
+        }
         return res.status(400).send('Name and email are required');
     }
     try {
@@ -48,9 +67,15 @@ The emails will be curated especially for you on the <b>basis</b> of what you se
 <br>
 <p>Yours Truly,<br>Team Chintu</p>`
         });
+        if (wantsJson(req)) {
+            return res.status(200).json({ ok: true });
+        }
         res.sendFile(path.join(__dirname, 'subscribed.html'));
     } catch (err) {
         console.error(err);
+        if (wantsJson(req)) {
+            return res.status(500).json({ ok: false, error: 'Error subscribing' });
+        }
         res.status(500).send('Error subscribing');
     }
 });
@@ -81,7 +106,7 @@ cron.schedule('0 12 * * 0', async () => {
     timezone: 'Asia/Kolkata'
 });
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3001;
 app.listen(PORT, () => {
-    console.log('server is running');
+    console.log(`Newsletter service listening on port ${PORT}`);
 });

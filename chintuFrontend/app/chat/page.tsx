@@ -7,40 +7,11 @@ import InputBar from '@/components/InputBar';
 import { ChatMessage, BackendResponse } from '@/types';
 
 const SUGGESTIONS = [
-  { label: 'Causal explosion', prompt: 'Show the causal explosion for recent US–China trade events' },
-  { label: 'Entity impact', prompt: 'What is the entity impact of the United States?' },
-  { label: 'Topic timeline', prompt: 'Show me the topic timeline for Indo-Pacific security' },
-  { label: 'Causal chain', prompt: 'Trace the causal chain from the Russian gas pipeline shutdown' },
+  { label: 'Causal', prompt: 'What were the downstream effects after recent Iran diplomatic events?' },
+  { label: 'Narrative', prompt: 'What led up to the latest NATO summit coverage in the news?' },
+  { label: 'Region', prompt: 'Explain causal links around recent Middle East tensions.' },
+  { label: 'With event id', prompt: 'What happened after evt_1292440643?' },
 ];
-
-function RadialSymbol() {
-  const lines = 8;
-  return (
-    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="3" fill="#c87c5a" />
-      {Array.from({ length: lines }).map((_, i) => {
-        const angle = (i * 360) / lines;
-        const rad = (angle * Math.PI) / 180;
-        const x1 = 32 + Math.cos(rad) * 8;
-        const y1 = 32 + Math.sin(rad) * 8;
-        const x2 = 32 + Math.cos(rad) * 24;
-        const y2 = 32 + Math.sin(rad) * 24;
-        return (
-          <line
-            key={i}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-            stroke="#c87c5a"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        );
-      })}
-    </svg>
-  );
-}
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -67,15 +38,33 @@ export default function ChatPage() {
       const res = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ question: text }),
       });
 
-      const data: BackendResponse = await res.json();
+      const data = (await res.json()) as BackendResponse & { error?: string; detail?: string };
+
+      if (!res.ok) {
+        const errText =
+          typeof data.detail === 'string'
+            ? data.detail
+            : typeof data.error === 'string'
+              ? data.error
+              : `Request failed (${res.status})`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: `Could not reach CHINTU backend.\n\n${errText}\n\nStart Flask: \`python -m backend\` from the repo root and set CHINTU_BACKEND_URL in the frontend if it is not http://127.0.0.1:5000.`,
+          },
+        ]);
+        return;
+      }
 
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: data.text || 'Analysis complete.',
+        content: data.text?.trim() || 'No answer text returned.',
         response: data,
       };
 
@@ -113,7 +102,14 @@ export default function ChatPage() {
         {!chatActive ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center max-w-[520px] px-6">
-              <RadialSymbol />
+              <img
+                src="/logo.png"
+                alt="CHINTU"
+                width={72}
+                height={72}
+                className="h-[72px] w-[72px] object-contain bg-transparent"
+                decoding="async"
+              />
               <h1 className="mt-6 text-2xl font-sora text-text font-light">
                 What&apos;s happening <span className="font-semibold">today?</span>
               </h1>

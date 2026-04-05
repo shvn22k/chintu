@@ -59,7 +59,7 @@ textarea {
   --text-landing: #1b1b1b;
   --muted-landing: #6b6b6b;
   --border-landing: rgba(0, 0, 0, 0.08);
-  background-color: var(--bg-landing);
+  background-color: #ffffff;
   color: var(--text-landing);
 }
 

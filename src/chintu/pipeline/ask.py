@@ -16,6 +16,7 @@ from chintu.nlp.event_resolve import resolve_event_id_for_question
 from chintu.nlp.intent_extract import intent_result_to_json, parse_question_intent
 from chintu.nlp.query_router import ALLOWED_QUERIES, QueryPlan, build_query_plan
 from chintu.tigergraph_client import run_installed_query
+from chintu.tigergraph_rest import user_hint_for_tigergraph_error
 from chintu.viz_payload import (
     build_graph_viz,
     collect_source_urls,
@@ -111,9 +112,9 @@ def run_ask_pipeline(question: str) -> dict[str, Any]:
         tg_err = er.get("search_error")
         if tg_err:
             hint = (
-                "I tried to look up events in TigerGraph for your question, but the search query failed. "
-                f"Details: {tg_err[:400]}\n\n"
-                "Check that the installed query **event_text_search** is deployed (see `gsql/chintu_event_text_search.gsql`)."
+                "I tried to look up events in TigerGraph for your question, but that step failed.\n\n"
+                f"**Technical detail:** {tg_err}\n\n"
+                + user_hint_for_tigergraph_error(tg_err)
             )
         elif prev:
             hint = (
