@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #1a1a1a;
+  --bg2: #222222;
+  --bg3: #2a2a2a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.13);
+  --text: #e8e6e1;
+  --muted: #7a7875;
+  --accent: #c87c5a;
+  --blue: #5a8fc8;
+  --green: #5ab87a;
+  --amber: #c8a85a;
+  --red: #f85149;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sora), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Textarea reset */
+textarea {
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+
+/* Landing Page Light Theme Override */
+.landing-page {
+  --bg-landing: #fbfaf8;
+  --text-landing: #1b1b1b;
+  --muted-landing: #6b6b6b;
+  --border-landing: rgba(0, 0, 0, 0.08);
+  background-color: var(--bg-landing);
+  color: var(--text-landing);
+}
+
+.landing-page .font-serif {
+  font-family: 'Georgia', serif;
+}
+
+/* Page Transition Animation */
+.page-fade-out {
+  animation: fadeOutDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+}
+
+/* Thinking dots animation */
+@keyframes thinking-dot {
+  0%, 80%, 100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.thinking-dot:nth-child(1) { animation: thinking-dot 1.4s infinite 0s; }
+.thinking-dot:nth-child(2) { animation: thinking-dot 1.4s infinite 0.2s; }
+.thinking-dot:nth-child(3) { animation: thinking-dot 1.4s infinite 0.4s; }
